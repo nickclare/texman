@@ -1,5 +1,0 @@
-PWD /run/media/nickclare/store/dev/tex/texman/src/templates
-INPUT /usr/share/texmf-dist/web2c/texmf.cnf
-INPUT /usr/share/texmf-var/web2c/pdftex/pdflatex.fmt
-INPUT /run/media/nickclare/store/dev/tex/texman/src/templates/doc.tera.tex
-OUTPUT /run/media/nickclare/store/dev/tex/texman/src/templates/doc.tera.log

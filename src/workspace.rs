@@ -72,11 +72,32 @@ pub struct DocumentMeta {
     pub document_class: String,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub document_options: Vec<String>,
+
+    /// Extra snippets (under the `prelude/` directory to import)
+    #[serde(
+        skip_serializing_if = "Vec::is_empty",
+        default = "DocumentMeta::default_prelude_includes"
+    )]
+    prelude_includes: Vec<String>,
+
+    #[serde(
+        skip_serializing_if = "Vec::is_empty",
+        default = "DocumentMeta::default_sections"
+    )]
+    sections: Vec<String>,
 }
 
 impl DocumentMeta {
     fn default_class() -> String {
         String::from("article")
+    }
+
+    fn default_prelude_includes() -> Vec<String> {
+        vec!["main.tex".into()]
+    }
+
+    fn default_sections() -> Vec<String> {
+        vec!["main.tex".into()]
     }
 
     pub fn load(root: &PathBuf) -> Result<Self> {
@@ -99,16 +120,36 @@ impl<'w> Document<'w> {
         let mut ctx = tera::Context::new();
         ctx.insert("metadata", &self.metadata);
         ctx.insert(
-            "workspace_root",
-            &self
-                .workspace
-                .path
-                .canonicalize()
-                .unwrap_or_else(|_| panic!("for now")),
+            "prelude_root",
+            &format!(
+                "{}/",
+                &self
+                    .workspace
+                    .path
+                    .join("prelude") // trailing / is required by latex, for some reason
+                    .canonicalize()
+                    .unwrap_or_else(|_| panic!("for now"))
+                    .to_str()
+                    .unwrap()
+            ),
         );
-        ctx.insert("prelude_path", "prelude/main.tex");
-        let main = PathBuf::new().join("docs").join(&self.key).join("main.tex");
-        ctx.insert("main", &main);
+        ctx.insert("prelude_includes", &self.metadata.prelude_includes);
+        ctx.insert(
+            "document_root",
+            &format!(
+                "{}/",
+                &self
+                    .workspace
+                    .path
+                    .join("docs")
+                    .join(&self.key)
+                    .canonicalize()
+                    .unwrap_or_else(|_| panic!("for now"))
+                    .to_str()
+                    .unwrap()
+            ),
+        );
+        ctx.insert("sections", &self.metadata.sections);
         ctx
     }
 
