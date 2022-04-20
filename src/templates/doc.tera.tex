@@ -1,0 +1,6 @@
+\documentclass{%- if metadata.document_options is defined -%}[{{ metadata.document_options | join(sep=',') }}]{%- endif -%}{{'{' ~ metadata.document_class ~ '}'}}
+\usepackage{import}
+\import{{ '{' ~ workspace_root ~ '}' ~ '{' ~ prelude_path ~ '}' }}
+\begin{document}
+\import{{ '{' ~ workspace_root ~ '}' ~ '{' ~ main ~ '}' }}
+\end{document}
