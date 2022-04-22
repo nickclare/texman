@@ -44,9 +44,18 @@ pub struct Workspace {
     metadata: Metadata,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub enum Engine {
+    Xelatex,
+    Pdflatex,
+}
+
 /// Metadata for a workspace
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Metadata {}
+pub struct Metadata {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    engine: Option<Engine>,
+}
 
 impl Metadata {
     pub fn load(root: &PathBuf) -> Result<Self> {
@@ -159,6 +168,16 @@ impl<'w> Document<'w> {
         Templates::get()
             .render("document", &ctx)
             .unwrap_or_else(|_e| panic!("couldn't render template: {_e}"))
+    }
+
+    pub fn output_path(&self) -> Result<PathBuf> {
+        Ok(self
+            .workspace
+            .path
+            .join("docs")
+            .join(&self.key)
+            .canonicalize()?
+            .join("output.pdf"))
     }
 }
 

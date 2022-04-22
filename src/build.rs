@@ -5,6 +5,7 @@ use crate::{
     workspace::{Workspace, WorkspaceError},
 };
 use clap::Parser;
+use xshell::{cmd, Shell};
 
 #[derive(Parser, Debug)]
 pub struct BuildOpts {
@@ -26,6 +27,9 @@ pub enum BuildError {
 
     #[error("error loading workspace: {0}")]
     WorkspaceError(#[from] crate::workspace::WorkspaceError),
+
+    #[error("build error: {0}")]
+    BuildError(#[from] xshell::Error),
 }
 
 fn find_workspace(start: &PathBuf) -> Result<Workspace, WorkspaceError> {
@@ -60,6 +64,13 @@ pub fn build(opts: &BuildOpts) -> Result<(), BuildError> {
     let document_text = document.generate();
     if opts.generate {
         println!("{}", document_text);
+    } else {
+        let sh = Shell::new()?;
+        let dir = sh.create_temp_dir()?;
+        let _guard = sh.push_dir(dir.path());
+        sh.write_file(PathBuf::from("output.tex"), document_text)?;
+        cmd!(sh, "xelatex output.tex").run()?;
+        sh.copy_file(PathBuf::from("output.pdf"), document.output_path()?)?;
     }
 
     Ok(())
